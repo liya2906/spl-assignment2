@@ -11,7 +11,6 @@ public class SharedVector {
     public SharedVector(double[] vector, VectorOrientation orientation) {
         this.vector = vector;
         this.orientation = orientation;
-
     }
 
     public double get(int index) {
@@ -84,8 +83,6 @@ public class SharedVector {
         } finally {
             this.writeUnlock();
             other.readUnlock();
-
-
         }
     }
 
