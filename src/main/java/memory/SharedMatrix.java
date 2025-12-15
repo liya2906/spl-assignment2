@@ -9,11 +9,19 @@ public class SharedMatrix {
     }
 
     public SharedMatrix(double[][] matrix) {
-        // TODO: construct matrix as row-major SharedVectors
+        SharedVector[] tempVectors = new SharedVector[matrix.length];
+        for (int i =0; i< matrix.length; i++){
+            tempVectors[i] = new SharedVector(matrix[i], VectorOrientation.ROW_MAJOR);
+        }
+        vectors = tempVectors;
     }
 
     public void loadRowMajor(double[][] matrix) {
-        // TODO: replace internal data with new row-major matrix
+        SharedVector[] tempVectors = new SharedVector[matrix.length];
+        for (int i =0; i< matrix.length; i++){
+            tempVectors[i] = new SharedVector(matrix[i], VectorOrientation.ROW_MAJOR);
+        }
+        vectors= tempVectors;
     }
 
     public void loadColumnMajor(double[][] matrix) {

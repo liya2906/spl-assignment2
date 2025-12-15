@@ -13,16 +13,27 @@ public class LinearAlgebraEngine {
     private TiredExecutor executor;
 
     public LinearAlgebraEngine(int numThreads) {
-        // TODO: create executor with given thread count
+        executor = new TiredExecutor(numThreads);
     }
 
     public ComputationNode run(ComputationNode computationRoot) {
-        // TODO: resolve computation tree step by step until final matrix is produced
-        return null;
+        computationRoot.associativeNesting();
+        ComputationNode curr = computationRoot.findResolvable();
+        while (curr != null){
+            loadAndCompute(curr);
+            curr = computationRoot.findResolvable();
+        }
+
+        return computationRoot;
     }
 
     public void loadAndCompute(ComputationNode node) {
         // TODO: load operand matrices
+        List<ComputationNode> children = node.getChildren();
+        leftMatrix =  new SharedMatrix(children.get(0).getMatrix());
+        rightMatrix =  new SharedMatrix(children.get(1).getMatrix());
+
+
         // TODO: create compute tasks & submit tasks to executor
     }
 
