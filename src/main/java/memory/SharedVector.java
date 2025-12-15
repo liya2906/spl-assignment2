@@ -70,11 +70,18 @@ public class SharedVector {
     }
 
     public void add(SharedVector other) {
+        // add two vectors
+        if (other == null)
+            throw new IllegalArgumentException("cant add, other vector is null");
+
         this.writeLock();
         other.readLock();
         try {
             if (vector.length != other.length()) {
                 throw new IllegalArgumentException("the vectors are not in the same size");
+            }
+            if (other.orientation != this.orientation) {
+                throw new IllegalArgumentException("Vectors must have the same orientation to add.");
             }
             for (int i = 0; i < vector.length; i++) {
                 this.vector[i] = this.vector[i] + other.vector[i];
@@ -87,6 +94,8 @@ public class SharedVector {
     }
 
     public void negate() {
+        // negate vector
+
         this.writeLock();
         try {
             for (int i = 0; i < vector.length; i++) {
@@ -98,6 +107,8 @@ public class SharedVector {
     }
 
     public double dot(SharedVector other) {
+        // compute dot product (row · column)
+
         this.readLock();
         other.readLock();
         try {
@@ -124,9 +135,18 @@ public class SharedVector {
     }
 
     public void vecMatMul(SharedMatrix matrix) {
+        // compute row-vector × matrix
+
         //this.writeLock();
         //for (int i = 0; i < matrix.length(); i++) {
            // matrix.get(i).readLock();
+
+        if (matrix == null) {
+            throw new IllegalArgumentException("matrix is null, we cant multiply matrix with vector");
+        }
+        if (matrix.length() == 0 || matrix.get(0).length() == 0) {
+            throw new IllegalArgumentException("Matrix is empty, we cant multiply matrix with vector");
+        }
 
         this.readLock();
         try {

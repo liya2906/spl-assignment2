@@ -28,6 +28,7 @@ public class SharedMatrix {
 
     public void loadColumnMajor(double[][] matrix) {
         // replace internal data with new column-major matrix
+
         SharedVector[] tempVectors = new SharedVector[matrix[0].length];
         for (int i = 0; i < tempVectors.length; i++) {
             double[] tempVector = new double[matrix.length];
@@ -49,11 +50,11 @@ public class SharedMatrix {
         if (vecs == null)
             throw new IllegalArgumentException("current SharedMatrix is empty");
 
+        if (vecs.length == 0 || vecs[0].length()==0)
+            return new double[0][0];
+
         acquireAllVectorReadLocks(vecs);
         try {
-
-            if (vecs.length == 0 || vecs[0].length()==0)
-                return new double[0][0];
 
             // the SharedMatrix orientation is ROW_MAJOR
             if (vecs[0].getOrientation() == VectorOrientation.ROW_MAJOR) {
