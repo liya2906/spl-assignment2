@@ -30,6 +30,7 @@ public class TiredExecutor {
 
     //TODO: CHECK THE INFLIGHT UPDATE!!!!!
     public void submit(Runnable task) {
+
         while (true){
 
             TiredThread curr=null;
@@ -77,15 +78,53 @@ public class TiredExecutor {
     }
 
     public void submitAll(Iterable<Runnable> tasks) {
-        // TODO: submit tasks one by one and wait until all finish
+        //  submit tasks one by one and wait until all finish
+        for (Runnable task : tasks) {
+            submit(task);
+        }
+        synchronized (this) {
+            while (inFlight.get() > 0) {
+                try{
+                    // waiting until inFlight= 0 (notified by submit)
+                    this.wait();
+                }
+                catch (InterruptedException e){
+                    Thread.currentThread().interrupt();
+                    return;
+                }
+            }
+        }
     }
 
     public void shutdown() throws InterruptedException {
-        // TODO
+        for (int i = 0 ; i<workers.length; i++){
+            workers[i].shutdown();
+        }
+        // waiting until the thread are shutdown for real
+        for (int i = 0 ; i<workers.length; i++){
+            workers[i].join();
+        }
+        idleMinHeap.clear();
+        inFlight.set(0);
     }
 
     public synchronized String getWorkerReport() {
-        // TODO: return readable statistics for each worker
-        return null;
+        //  return readable statistics for each worker
+            StringBuilder sb = new StringBuilder();
+
+            sb.append("=============== WORKER REPORT ===============\n");
+
+            for (TiredThread w : workers) {
+                sb.append("Worker #").append(w.getWorkerId())
+                        .append(" | Busy: ").append(w.isBusy())
+                        .append(" | Fatigue: ").append(w.getFatigue())
+                        .append(" | Work Time: ").append(w.getTimeUsed() / 1_000_000.0).append(" ms")
+                        .append(" | Idle Time: ").append(w.getTimeIdle() / 1_000_000.0).append(" ms")
+                        .append("\n");
+            }
+
+            sb.append("============================================\n");
+            return sb.toString();
+        }
     }
-}
+
