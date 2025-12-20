@@ -56,20 +56,39 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
      * it throws IllegalStateException.
      */
     public void newTask(Runnable task) {
-        if ( !alive.get() || !handoff.offer(task) )
-            throw new IllegalStateException("worker is unavailable");
+        if (task == null) {
+            throw new IllegalArgumentException("No task to execute");
+        }
+        if (!alive.get()) {
+            throw new IllegalStateException("Worker is shutting down");
+        }
+        if (!handoff.offer(task)) {
+            throw new IllegalStateException("Worker already assigned to a task");
+        }
     }
-
     /**
      * Request this worker to stop after finishing current task.
      * Inserts a poison pill so the worker wakes up and exits.
      */
     public void shutdown() {
-        alive.set(false);
-        handoff.offer(POISON_PILL);
-    }
+            // Ensure shutdown is executed only once
+            if (!alive.compareAndSet(true, false)) {
+                return;
+            }
+            // put() blocks until there is space in the queue,
+            // guaranteeing that the POISON_PILL is delivered to the worker thread
+            try {
+                handoff.put(POISON_PILL);
+            }
+            // If the thread calling shutdown is interrupted while waiting,
+            // restore the interrupt status and exit
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }
 
-    @Override
+
+        @Override
     public void run() {
         try {
             this.idleStartTime.set(System.nanoTime());
@@ -104,7 +123,6 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
         // Interrupted while blocked on take(), stop waiting and exit
         catch(InterruptedException e){
             Thread.currentThread().interrupt();
-            return;
         }
     }
 
