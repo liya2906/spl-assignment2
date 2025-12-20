@@ -28,54 +28,70 @@ public class TiredExecutor {
     }
 
 
-    //TODO: CHECK THE INFLIGHT UPDATE!!!!!
+
     public void submit(Runnable task) {
 
-        while (true){
+        if (task == null) {
+            throw new IllegalArgumentException("task cannot be null");
+        }
+
+        while (true){ //TODO: understand if we need to do this while in order to move to a different thread if the current thread got interrupted,
+            //TODO: or that if the current thread got interrupted it means that all of the threads got interrupted and the while is useless
+
 
             TiredThread curr=null;
 
             try {
-
-                curr = idleMinHeap.take(); // first possible exception
-
-                TiredThread copy = curr;
-                inFlight.addAndGet(1); //CHECK THE INFLIGHT UPDATE!!!!!
-                // wrap the task so we can maintain the inFlight and idleMinHeap fields
-                Runnable wrappedTask = () -> {
-                    try {
-                        task.run();
-                    } finally {
-                        // task finished, worker became idle again
-                        idleMinHeap.add(copy);
-
-                        // notify all threads that are waiting if all tasks completed
-                        if (inFlight.decrementAndGet() == 0) {
-                            synchronized (this) {
-                                this.notifyAll();
-                            }
-                        }
-                    }
-                };
-
-                curr.newTask(wrappedTask);// second possible exception
-                return; // SUCCESS - exit submit
+                curr = idleMinHeap.take();
             }
-
             // Interrupted while blocked on take(), stop waiting and exit
             catch(InterruptedException e) {
                 Thread.currentThread().interrupt();
                 return;
             }
 
+            TiredThread copy = curr;
+            inFlight.addAndGet(1);
+            // wrap the task so we can maintain the inFlight and idleMinHeap fields
+            Runnable wrappedTask = () -> {
+                try {
+                    task.run();
+                } finally {
+                    // task finished, worker became idle again
+                    idleMinHeap.add(copy);
+
+                    // notify all threads that are waiting if all tasks completed
+                    if (inFlight.decrementAndGet() == 0) {
+                        synchronized (this) {
+                                this.notifyAll();
+                        }
+                    }
+                }
+            };
+
+            try {
+                curr.newTask(wrappedTask);
+            }
             // if the worker was unavailable; return it to the pool and retry
             catch (IllegalStateException e) {
-                inFlight.decrementAndGet();
+
                 if (curr != null && curr.isAlive())
                     idleMinHeap.add(curr);
+
+                if (inFlight.decrementAndGet() == 0){
+                    synchronized (this) {
+                        this.notifyAll();
+                    }
+                }
+
+                throw e;
             }
+
+            return; // SUCCESS - exit submit
+
         }
     }
+
 
     public void submitAll(Iterable<Runnable> tasks) {
         //  submit tasks one by one and wait until all finish
@@ -97,6 +113,21 @@ public class TiredExecutor {
     }
 
     public void shutdown() throws InterruptedException {
+
+        // wait until all in-flight tasks are completed
+        synchronized (this){
+            while (inFlight.get() > 0){
+                try {
+                    this.wait();
+                }
+                // current thread was interrupted while waiting for shutdown conditions
+                catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw e;
+                }
+            }
+        }
+
         for (int i = 0 ; i<workers.length; i++){
             workers[i].shutdown();
         }
@@ -105,7 +136,6 @@ public class TiredExecutor {
             workers[i].join();
         }
         idleMinHeap.clear();
-        inFlight.set(0);
     }
 
     public synchronized String getWorkerReport() {
