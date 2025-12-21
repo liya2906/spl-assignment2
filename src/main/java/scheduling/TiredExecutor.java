@@ -106,7 +106,7 @@ public class TiredExecutor {
                 }
                 catch (InterruptedException e){
                     Thread.currentThread().interrupt();
-                    return;
+                    return; // TODO: check if we need to throw an exception
                 }
             }
         }

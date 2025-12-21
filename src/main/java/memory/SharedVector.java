@@ -56,6 +56,7 @@ public class SharedVector {
         this.lock.readLock().unlock();
     }
 
+    // todo: check the transpose
     public void transpose() {
         writeLock();
         try {
@@ -88,8 +89,8 @@ public class SharedVector {
             }
 
         } finally {
-            this.writeUnlock();
             other.readUnlock();
+            this.writeUnlock();
         }
     }
 
@@ -125,11 +126,10 @@ public class SharedVector {
             }
             return output;
 
-        } finally {
-            this.readUnlock();
+        }
+        finally {
             other.readUnlock();
-
-
+            this.readUnlock();
         }
 
     }
