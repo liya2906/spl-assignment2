@@ -68,8 +68,8 @@ public class LinearAlgebraEngine {
 
         executor.submitAll(tasks);
 
-        if (type==ComputationNodeType.TRANSPOSE) // todo: check the transpose
-            leftMatrix.loadRowMajor(leftMatrix.readRowMajor());
+        //if (type==ComputationNodeType.TRANSPOSE) // todo: check the transpose
+            //leftMatrix.loadRowMajor(leftMatrix.readRowMajor());
 
         node.resolve(leftMatrix.readRowMajor());
     }
@@ -162,4 +162,15 @@ public class LinearAlgebraEngine {
         // return summary of worker activity
         return executor.getWorkerReport();
     }
+
+    public void shutdown() throws InterruptedException {
+        try {
+            executor.shutdown();
+        }
+        catch (InterruptedException e) {
+            throw new InterruptedException("Executor shutdown interrupted: " + e.getMessage());
+        }
+
+    }
+
 }

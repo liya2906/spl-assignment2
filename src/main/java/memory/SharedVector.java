@@ -114,7 +114,7 @@ public class SharedVector {
         try {
             if (this.orientation != VectorOrientation.ROW_MAJOR)
                 throw new IllegalArgumentException(" this_vector is not ROW_MAJOR, we cant multiply vectors");
-            if (other.getOrientation() != VectorOrientation.COLUMN_MAJOR)
+            if (other.orientation != VectorOrientation.COLUMN_MAJOR)
                 throw new IllegalArgumentException("other_vector is not COLUMN_MAJOR, we cant multiply vectors");
             if (this.vector.length != other.length()) {
                 throw new IllegalArgumentException("invalid dimensions , we cant multiply vectors");
@@ -160,7 +160,6 @@ public class SharedVector {
         } finally {
             this.readUnlock();
         }
-
         this.writeLock();
         try{
             this.vector = result;
@@ -168,6 +167,6 @@ public class SharedVector {
         } finally {
             this.writeUnlock();
         }
-        }
+    }
 }
 
