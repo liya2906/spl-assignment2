@@ -64,8 +64,7 @@ public class SharedVector {
                 case ROW_MAJOR -> orientation = VectorOrientation.COLUMN_MAJOR;
                 case COLUMN_MAJOR -> orientation = VectorOrientation.ROW_MAJOR;
             }
-        }
-        finally {
+        } finally {
             writeUnlock();
         }
     }
@@ -115,8 +114,8 @@ public class SharedVector {
         try {
             if (this.orientation != VectorOrientation.ROW_MAJOR)
                 throw new IllegalArgumentException(" this_vector is not ROW_MAJOR, we cant multiply vectors");
-            if(other.getOrientation() != VectorOrientation.COLUMN_MAJOR )
-                throw new IllegalArgumentException( "other_vector is not COLUMN_MAJOR, we cant multiply vectors");
+            if (other.getOrientation() != VectorOrientation.COLUMN_MAJOR)
+                throw new IllegalArgumentException("other_vector is not COLUMN_MAJOR, we cant multiply vectors");
             if (this.vector.length != other.length()) {
                 throw new IllegalArgumentException("invalid dimensions , we cant multiply vectors");
             }
@@ -126,8 +125,7 @@ public class SharedVector {
             }
             return output;
 
-        }
-        finally {
+        } finally {
             other.readUnlock();
             this.readUnlock();
         }
@@ -136,19 +134,18 @@ public class SharedVector {
 
     public void vecMatMul(SharedMatrix matrix) {
         // compute row-vector × matrix
-
-        //this.writeLock();
-        //for (int i = 0; i < matrix.length(); i++) {
-           // matrix.get(i).readLock();
-
         if (matrix == null) {
             throw new IllegalArgumentException("matrix is null, we cant multiply matrix with vector");
         }
         if (matrix.length() == 0 || matrix.get(0).length() == 0) {
             throw new IllegalArgumentException("Matrix is empty, we cant multiply matrix with vector");
         }
+        if (matrix.getOrientation() != VectorOrientation.COLUMN_MAJOR) {
+            throw new IllegalArgumentException(" matrix invalid orientation, we cant multiply matrix with vector");
+        }
 
         this.readLock();
+        double[] result = new double[matrix.length()];
         try {
 
             if (this.length() != matrix.length()) {
@@ -156,32 +153,21 @@ public class SharedVector {
             }
             if (this.orientation != VectorOrientation.ROW_MAJOR)
                 throw new IllegalArgumentException(" vector invalid orientation, we cant multiply matrix with vector");
-        }
-        finally {
+
+            for (int i = 0; i < matrix.length(); i++) {
+                result[i] = this.dot(matrix.get(i));
+            }
+        } finally {
             this.readUnlock();
         }
 
-        if(matrix.getOrientation() != VectorOrientation.COLUMN_MAJOR) {
-            throw new IllegalArgumentException(" matrix invalid orientation, we cant multiply matrix with vector");
-        }
-
-        double[] result = new double[matrix.length()];
-        for (int i = 0; i < matrix.length(); i++) {
-            result[i] = this.dot(matrix.get(i));
-
-        }
         this.writeLock();
         try{
-        this.vector = result;
-        }
-        finally {
+            this.vector = result;
+
+        } finally {
             this.writeUnlock();
-
-
-//            for (int i = 0; i < matrix.length(); i++) {
-//                matrix.get(i).readUnlock();
-            }
-
         }
-    }
+        }
+}
 
