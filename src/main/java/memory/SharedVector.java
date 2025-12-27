@@ -148,7 +148,7 @@ public class SharedVector {
         double[] result = new double[matrix.length()];
         try {
 
-            if (this.length() != matrix.length()) {
+            if (this.length() != matrix.get(0).length()) {
                 throw new IllegalArgumentException("  mismatch dimensions , we cant multiply matrix with vector");
             }
             if (this.orientation != VectorOrientation.ROW_MAJOR)

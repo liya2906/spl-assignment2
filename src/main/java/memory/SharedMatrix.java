@@ -12,8 +12,9 @@ public class SharedMatrix {
     public SharedMatrix(double[][] matrix) {
         SharedVector[] tempVectors = new SharedVector[matrix.length];
         for (int i = 0; i < matrix.length; i++) {
-            tempVectors[i] = new SharedVector(matrix[i], VectorOrientation.ROW_MAJOR);
-        }
+        
+            tempVectors[i] = new SharedVector(matrix[i].clone(), VectorOrientation.ROW_MAJOR);
+        } 
         vectors = tempVectors;
     }
 
@@ -21,7 +22,7 @@ public class SharedMatrix {
         // replace internal data with new raw-major matrix
         SharedVector[] tempVectors = new SharedVector[matrix.length];
         for (int i = 0; i < matrix.length; i++) {
-            tempVectors[i] = new SharedVector(matrix[i], VectorOrientation.ROW_MAJOR);
+            tempVectors[i] = new SharedVector(matrix[i].clone(), VectorOrientation.ROW_MAJOR);
         }
         vectors = tempVectors;
     }
