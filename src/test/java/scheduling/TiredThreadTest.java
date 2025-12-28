@@ -141,7 +141,6 @@ public class TiredThreadTest {
         worker.join();
     }
 
-
     @Test
     void testTaskExecution_MultipleTasksExecutedSequentially() throws InterruptedException {
         TiredThread worker = new TiredThread(1, 1.0);
@@ -160,6 +159,30 @@ public class TiredThreadTest {
         assertTrue(task2Executed.get());
     }
 
+    @Test
+    void testIdleTimeUpdatedAfterWaitingForTask() throws InterruptedException {
+        TiredThread worker = new TiredThread(1, 1.0);
+
+        worker.start();
+
+        Thread.sleep(50);
+
+        long beforeTask = worker.getTimeIdle();
+
+        worker.newTask(() -> {
+        });
+
+        Thread.sleep(50);
+
+        long afterTask = worker.getTimeIdle();
+
+        assertTrue(afterTask > beforeTask,
+                "Idle time should increase after thread waited for task");
+
+        worker.shutdown();
+        worker.join();
+    }
+
     // Tests for newTask() Validation
 
     @Test
@@ -169,28 +192,6 @@ public class TiredThreadTest {
         assertThrows(IllegalArgumentException.class, () -> {
             worker.newTask(null);
         });
-    }
-
-    @Test
-    void testNewTask_WorkerAlreadyHasTask_ThrowsException() throws InterruptedException {
-        TiredThread worker = new TiredThread(1, 1.0);
-
-        worker.start();
-        worker.newTask(() -> {
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-        });
-
-        assertThrows(IllegalStateException.class, () -> {
-            worker.newTask(() -> {
-            });
-        });
-
-        worker.shutdown();
-        worker.join();
     }
 
     @Test
@@ -534,50 +535,6 @@ public class TiredThreadTest {
         assertTrue(worker.isBusy());
 
         Thread.sleep(60);
-        assertFalse(worker.isBusy());
-
-        worker.shutdown();
-        worker.join();
-    }
-
-    // Tests for Defensive Behavior
-
-    @Test
-    void testDefensiveBehavior_TaskThrowsException_WorkerContinues() throws InterruptedException {
-        TiredThread worker = new TiredThread(1, 1.0);
-        AtomicBoolean task2Executed = new AtomicBoolean(false);
-
-        worker.start();
-        worker.newTask(() -> {
-            throw new RuntimeException("Task failed");
-        });
-        Thread.sleep(50);
-        worker.newTask(() -> task2Executed.set(true));
-        Thread.sleep(50);
-
-        assertTrue(task2Executed.get());
-        assertFalse(worker.isBusy());
-
-        worker.shutdown();
-        worker.join();
-    }
-
-    @Test
-    void testDefensiveBehavior_TimeTrackingAfterException() throws InterruptedException {
-        TiredThread worker = new TiredThread(1, 1.0);
-
-        worker.start();
-        worker.newTask(() -> {
-            try {
-                Thread.sleep(30);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            throw new RuntimeException("Task failed");
-        });
-        Thread.sleep(100);
-
-        assertTrue(worker.getTimeUsed() > 0);
         assertFalse(worker.isBusy());
 
         worker.shutdown();

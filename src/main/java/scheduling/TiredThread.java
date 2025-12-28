@@ -7,7 +7,8 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class TiredThread extends Thread implements Comparable<TiredThread> {
 
-    private static final Runnable POISON_PILL = () -> {}; // Special task to signal shutdown
+    private static final Runnable POISON_PILL = () -> {
+    }; // Special task to signal shutdown
 
     private final int id; // Worker index assigned by the executor
     private final double fatigueFactor; // Multiplier for fatigue calculation
@@ -17,7 +18,8 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
     // Single-slot handoff queue; executor will put tasks here
     private final BlockingQueue<Runnable> handoff = new ArrayBlockingQueue<>(1);
 
-    private final AtomicBoolean busy = new AtomicBoolean(false); // Indicates if the worker is currently executing a task
+    private final AtomicBoolean busy = new AtomicBoolean(false); // Indicates if the worker is currently executing a
+                                                                 // task
 
     private final AtomicLong timeUsed = new AtomicLong(0); // Total time spent executing tasks
     private final AtomicLong timeIdle = new AtomicLong(0); // Total time spent idle
@@ -66,38 +68,38 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
             throw new IllegalStateException("Worker already assigned to a task");
         }
     }
+
     /**
      * Request this worker to stop after finishing current task.
      * Inserts a poison pill so the worker wakes up and exits.
      */
     public void shutdown() {
-            // Ensure shutdown is executed only once
-            if (!alive.compareAndSet(true, false)) {
-                return;
-            }
-            // put() blocks until there is space in the queue,
-            // guaranteeing that the POISON_PILL is delivered to the worker thread
-            try {
-                handoff.put(POISON_PILL);
-            }
-            // If the thread calling shutdown is interrupted while waiting,
-            // restore the interrupt status and exit
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
+        // Ensure shutdown is executed only once
+        if (!alive.compareAndSet(true, false)) {
+            return;
         }
-
-
-        @Override
-    public void run() {
+        // put() blocks until there is space in the queue,
+        // guaranteeing that the POISON_PILL is delivered to the worker thread
         try {
-            this.idleStartTime.set(System.nanoTime());
-            while (true) {
+            handoff.put(POISON_PILL);
+        }
+        // If the thread calling shutdown is interrupted while waiting,
+        // restore the interrupt status and exit
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+    }
 
-                // calculating Idle time (because take() blocks the thread until there is a task)
+    @Override
+    public void run() {
+        this.idleStartTime.set(System.nanoTime());
+        while (true) {
+            try {
+                // calculating Idle time (because take() blocks the thread until there is a
+                // task)
                 Runnable task = handoff.take();
                 long endTime = System.nanoTime();
-                this.timeIdle.addAndGet( endTime - this.idleStartTime.get());
+                this.timeIdle.addAndGet(endTime - this.idleStartTime.get());
 
                 // first condition - checks if shutdown was made while waiting at take()
                 if (!alive.get() || task == POISON_PILL)
@@ -111,19 +113,23 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
                 // the TiredThread fields will remain valid
                 try {
                     task.run();
-                }
-                finally {
+                } finally {
                     busy.set(false);
-                    endTime =System.nanoTime();
+                    endTime = System.nanoTime();
                     this.timeUsed.addAndGet(endTime - startTime);
                     this.idleStartTime.set(endTime);
                 }
             }
+            // Interrupted while blocked on take(), stop waiting and exit
+            catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+            catch(RuntimeException e){
+                System.out.println("Runtime Exception caught " + e.getMessage());
+            }
+        
         }
-        // Interrupted while blocked on take(), stop waiting and exit
-        catch(InterruptedException e){
-            Thread.currentThread().interrupt();
-        }
+
     }
 
     @Override

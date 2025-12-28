@@ -32,6 +32,9 @@ public class LinearAlgebraEngine {
 
     public void loadAndCompute(ComputationNode node) {
         // load operand matrices, and create compute tasks & submit tasks to executor
+        if (node == null) {
+            throw new IllegalArgumentException("node to compute should not be null");
+        }
         List<ComputationNode> children = node.getChildren();
         if(node.getChildren() == null || children.isEmpty()) {
             throw new IllegalArgumentException("can't compute, node have no children");
@@ -108,8 +111,7 @@ public class LinearAlgebraEngine {
             throw new IllegalArgumentException("cannot MULTIPLY, M1 is not ROW_MAJOR");
         if (rightMatrix.getOrientation()!= VectorOrientation.COLUMN_MAJOR)
             throw new IllegalArgumentException("cannot MULTIPLY, M2 is not COLUMN_MAJOR");
-        if (leftMatrix.length()!=rightMatrix.length() ||
-                leftMatrix.get(0).length()!=rightMatrix.get(0).length())
+        if (leftMatrix.get(0).length()!=rightMatrix.get(0).length())
             throw new IllegalArgumentException("cannot MULTIPLY, mismatch in matrices sizes");
 
         List<Runnable> tasks = new ArrayList<>();

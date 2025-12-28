@@ -1,0 +1,12 @@
+{
+  "operator": "+",
+  "operands": [
+    [
+      []
+    ],
+    [
+      [1, 2]
+    ]
+  ],
+  "expectError": true
+}

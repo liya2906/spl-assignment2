@@ -19,10 +19,10 @@ public class TiredExecutor {
         workers=new TiredThread[numThreads];
         for (int i=0 ; i<numThreads; i++){
             workers[i]= new TiredThread( i , 0.5 + Math.random());
-            idleMinHeap.add(workers[i]);
             // Start the worker thread; it enters run() and blocks on handoff.take(),
             // until the first task is assigned
             workers[i].start();
+            idleMinHeap.add(workers[i]);
         }
 
     }
@@ -47,7 +47,7 @@ public class TiredExecutor {
             // Interrupted while blocked on take(), stop waiting and exit
             catch(InterruptedException e) {
                 Thread.currentThread().interrupt();
-                return;
+                throw new IllegalStateException("submit interrupted", e);
             }
 
             TiredThread copy = curr;
@@ -95,9 +95,13 @@ public class TiredExecutor {
 
     public void submitAll(Iterable<Runnable> tasks) {
         //  submit tasks one by one and wait until all finish
+         if (tasks== null)
+            throw new IllegalArgumentException("tasks cannot be null");
+
         for (Runnable task : tasks) {
             submit(task);
         }
+        
         synchronized (this) {
             while (inFlight.get() > 0) {
                 try{
