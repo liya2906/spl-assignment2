@@ -15,47 +15,6 @@ public class TiredExecutorTest {
     // Tests for Exception Handling During Task Execution
 
     @Test
-    void testTaskExecution_ExceptionInTask_WorkerStaysAlive() throws InterruptedException {
-        TiredThread worker = new TiredThread(1, 1.0);
-
-        AtomicBoolean secondTaskExecuted = new AtomicBoolean(false);
-
-        CountDownLatch firstTaskStarted = new CountDownLatch(1);
-        CountDownLatch firstTaskFinished = new CountDownLatch(1);
-
-        worker.start();
-
-        // First task throws exception
-        worker.newTask(() -> {
-            firstTaskStarted.countDown();
-            try {
-                throw new RuntimeException("Task failed");
-            } finally {
-                firstTaskFinished.countDown();
-            }
-        });
-
-        // Wait until first task actually started
-        firstTaskStarted.await();
-
-        // Wait until it finished (even with exception)
-        firstTaskFinished.await();
-
-        // Now it is safe to submit another task
-        worker.newTask(() -> secondTaskExecuted.set(true));
-
-        // Give time for second task to execute
-        Thread.sleep(50);
-
-        assertTrue(
-                secondTaskExecuted.get(),
-                "Worker should continue running after a task throws an exception");
-
-        worker.shutdown();
-        worker.join();
-    }
-
-    @Test
     void testTaskExecution_ExceptionInTask_BusyFlagCleared() throws InterruptedException {
         TiredThread worker = new TiredThread(1, 1.0);
 

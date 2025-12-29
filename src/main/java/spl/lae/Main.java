@@ -15,13 +15,18 @@ public class Main {
             OutputWriter.write(root.getMatrix(), "My_out.json");
         } catch (ParseException e) {
             throw new RuntimeException(e);
-        }finally {
+        }
+        catch (RuntimeException e){
+            OutputWriter.write(e.getMessage(), "My_out.json");
+        }
+        finally {
             try {
                 LAE.shutdown();
             }
             catch (InterruptedException e) {
                 throw new RuntimeException(e);
             }
+        
         }
 
     }

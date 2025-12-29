@@ -93,8 +93,9 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
     @Override
     public void run() {
         this.idleStartTime.set(System.nanoTime());
-        while (true) {
-            try {
+        try {
+            while (true) {
+
                 // calculating Idle time (because take() blocks the thread until there is a
                 // task)
                 Runnable task = handoff.take();
@@ -120,14 +121,11 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
                     this.idleStartTime.set(endTime);
                 }
             }
-            // Interrupted while blocked on take(), stop waiting and exit
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-            }
-            catch(RuntimeException e){
-                System.out.println("Runtime Exception caught " + e.getMessage());
-            }
-        
+
+        }
+        // Interrupted while blocked on take(), stop waiting and exit
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
         }
 
     }
