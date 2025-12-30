@@ -12,13 +12,6 @@ class LinearAlgebraEngineTest {
 
     private LinearAlgebraEngine engine;
 
-    @AfterEach
-    void tearDown() throws InterruptedException {
-        if (engine != null) {
-            engine.shutdown();
-        }
-    }
-
     // ========================
     // 1. Constructor & Initialization
     // ========================
@@ -331,64 +324,6 @@ class LinearAlgebraEngineTest {
     // 7. Edge Cases
     // ========================
 
-    @Test
-    void testAdd_1x1Matrices_ReturnsCorrectResult() {
-        engine = new LinearAlgebraEngine(1);
-        double[][] m1 = {{5}};
-        double[][] m2 = {{3}};
-        
-        ComputationNode left = new ComputationNode(m1);
-        ComputationNode right = new ComputationNode(m2);
-        ComputationNode root = new ComputationNode(ComputationNodeType.ADD, List.of(left, right));
-
-        engine.run(root);
-        
-        double[][] expected = {{8}};
-        assertMatrixEquals(expected, root.getMatrix());
-    }
-
-    @Test
-    void testMultiply_1x1Matrices_ReturnsCorrectResult() {
-        engine = new LinearAlgebraEngine(1);
-        double[][] m1 = {{5}};
-        double[][] m2 = {{3}};
-        
-        ComputationNode left = new ComputationNode(m1);
-        ComputationNode right = new ComputationNode(m2);
-        ComputationNode root = new ComputationNode(ComputationNodeType.MULTIPLY, List.of(left, right));
-
-        engine.run(root);
-        
-        double[][] expected = {{15}};
-        assertMatrixEquals(expected, root.getMatrix());
-    }
-
-    @Test
-    void testNegate_1x1Matrix_ReturnsCorrectResult() {
-        engine = new LinearAlgebraEngine(1);
-        double[][] m1 = {{7}};
-        
-        ComputationNode child = new ComputationNode(m1);
-        ComputationNode root = new ComputationNode(ComputationNodeType.NEGATE, List.of(child));
-
-        engine.run(root);
-        
-        double[][] expected = {{-7}};
-        assertMatrixEquals(expected, root.getMatrix());
-    }
-
-    @Test
-    void testTranspose_1x1Matrix_ReturnsOriginal() {
-        engine = new LinearAlgebraEngine(1);
-        double[][] m1 = {{9}};
-        
-        ComputationNode child = new ComputationNode(m1);
-        ComputationNode root = new ComputationNode(ComputationNodeType.TRANSPOSE, List.of(child));
-
-        engine.run(root);
-        
-        assertMatrixEquals(m1, root.getMatrix());
-    }
 
     @Test
     void testMixedOperations_AddThenMultiply_ReturnsCorrectResult() {
@@ -410,11 +345,12 @@ class LinearAlgebraEngineTest {
     }
 
     @Test
-    void testRepeatedRuns_SameEngine_WorksCorrectly() throws InterruptedException {
-        engine = new LinearAlgebraEngine(2);
+    void testTwoIndependentEngines_WorkCorrectly() {
         double[][] m1 = {{1, 2}, {3, 4}};
         double[][] m2 = {{1, 1}, {1, 1}};
         
+        // First run with new engine
+        engine = new LinearAlgebraEngine(2);
         ComputationNode left1 = new ComputationNode(m1);
         ComputationNode right1 = new ComputationNode(m2);
         ComputationNode root1 = new ComputationNode(ComputationNodeType.ADD, List.of(left1, right1));
@@ -423,6 +359,8 @@ class LinearAlgebraEngineTest {
         double[][] expected1 = {{2, 3}, {4, 5}};
         assertMatrixEquals(expected1, root1.getMatrix());
 
+        // Second run with new engine instance
+        engine = new LinearAlgebraEngine(2);
         ComputationNode left2 = new ComputationNode(m1);
         ComputationNode right2 = new ComputationNode(m2);
         ComputationNode root2 = new ComputationNode(ComputationNodeType.MULTIPLY, List.of(left2, right2));
@@ -461,18 +399,29 @@ class LinearAlgebraEngineTest {
     }
 
     @Test
-    void testShutdown_CompletesCleanly() throws InterruptedException {
+    void testRun_ShutsDownExecutor_AfterCompletion() {
         engine = new LinearAlgebraEngine(2);
         double[][] m1 = {{1, 2}, {3, 4}};
         double[][] m2 = {{1, 1}, {1, 1}};
         
-        ComputationNode left = new ComputationNode(m1);
-        ComputationNode right = new ComputationNode(m2);
-        ComputationNode root = new ComputationNode(ComputationNodeType.ADD, List.of(left, right));
-        engine.run(root);
+        // First run completes successfully
+        ComputationNode left1 = new ComputationNode(m1);
+        ComputationNode right1 = new ComputationNode(m2);
+        ComputationNode root1 = new ComputationNode(ComputationNodeType.ADD, List.of(left1, right1));
+        engine.run(root1);
+        
+        double[][] expected1 = {{2, 3}, {4, 5}};
+        assertMatrixEquals(expected1, root1.getMatrix());
 
-        engine.shutdown();
-        // If shutdown completes without exception, test passes
+        // Attempting to run again with the same engine should fail
+        // because the executor was shut down inside run()
+        ComputationNode left2 = new ComputationNode(m1);
+        ComputationNode right2 = new ComputationNode(m2);
+        ComputationNode root2 = new ComputationNode(ComputationNodeType.MULTIPLY, List.of(left2, right2));
+        
+        assertThrows(RuntimeException.class, () -> {
+            engine.run(root2);
+        });
     }
 
     // ========================

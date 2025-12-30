@@ -13,12 +13,12 @@ public class TiredExecutor {
 
     public TiredExecutor(int numThreads) {
 
-        if (numThreads<=0)
+        if (numThreads <= 0)
             throw new IllegalArgumentException("cannot initialize TiredExecutor - num of threads <=0 ");
 
-        workers=new TiredThread[numThreads];
-        for (int i=0 ; i<numThreads; i++){
-            workers[i]= new TiredThread( i , 0.5 + Math.random());
+        workers = new TiredThread[numThreads];
+        for (int i = 0; i < numThreads; i++) {
+            workers[i] = new TiredThread(i, 0.5 + Math.random());
             // Start the worker thread; it enters run() and blocks on handoff.take(),
             // until the first task is assigned
             workers[i].start();
@@ -27,25 +27,32 @@ public class TiredExecutor {
 
     }
 
-
-
     public void submit(Runnable task) {
 
         if (task == null) {
             throw new IllegalArgumentException("task cannot be null");
         }
 
-        while (true){ //TODO: understand if we need to do this while in order to move to a different thread if the current thread got interrupted,
-            //TODO: or that if the current thread got interrupted it means that all of the threads got interrupted and the while is useless
+        boolean anyAlive = false;
+        for (TiredThread w : workers) {
+            if (w.isAlive()) {
+                anyAlive = true;
+                break;
+            }
+        }
 
+        if (!anyAlive) {
+            throw new IllegalStateException("Executor has been shut down");
+        }
 
-            TiredThread curr=null;
+        while (true) { 
+            TiredThread curr = null;
 
             try {
                 curr = idleMinHeap.take();
             }
             // Interrupted while blocked on take(), stop waiting and exit
-            catch(InterruptedException e) {
+            catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
                 throw new IllegalStateException("submit interrupted", e);
             }
@@ -63,7 +70,7 @@ public class TiredExecutor {
                     // notify all threads that are waiting if all tasks completed
                     if (inFlight.decrementAndGet() == 0) {
                         synchronized (this) {
-                                this.notifyAll();
+                            this.notifyAll();
                         }
                     }
                 }
@@ -78,7 +85,7 @@ public class TiredExecutor {
                 if (curr != null && curr.isAlive())
                     idleMinHeap.add(curr);
 
-                if (inFlight.decrementAndGet() == 0){
+                if (inFlight.decrementAndGet() == 0) {
                     synchronized (this) {
                         this.notifyAll();
                     }
@@ -92,23 +99,21 @@ public class TiredExecutor {
         }
     }
 
-
     public void submitAll(Iterable<Runnable> tasks) {
-        //  submit tasks one by one and wait until all finish
-         if (tasks== null)
+        // submit tasks one by one and wait until all finish
+        if (tasks == null)
             throw new IllegalArgumentException("tasks cannot be null");
 
         for (Runnable task : tasks) {
             submit(task);
         }
-        
+
         synchronized (this) {
             while (inFlight.get() > 0) {
-                try{
+                try {
                     // waiting until inFlight= 0 (notified by submit)
                     this.wait();
-                }
-                catch (InterruptedException e){
+                } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
                     return; // TODO: check if we need to throw an exception
                 }
@@ -119,8 +124,8 @@ public class TiredExecutor {
     public void shutdown() throws InterruptedException {
 
         // wait until all in-flight tasks are completed
-        synchronized (this){
-            while (inFlight.get() > 0){
+        synchronized (this) {
+            while (inFlight.get() > 0) {
                 try {
                     this.wait();
                 }
@@ -132,33 +137,32 @@ public class TiredExecutor {
             }
         }
 
-        for (int i = 0 ; i<workers.length; i++){
+        for (int i = 0; i < workers.length; i++) {
             workers[i].shutdown();
         }
         // waiting until the thread are shutdown for real
-        for (int i = 0 ; i<workers.length; i++){
+        for (int i = 0; i < workers.length; i++) {
             workers[i].join();
         }
         idleMinHeap.clear();
     }
 
     public synchronized String getWorkerReport() {
-        //  return readable statistics for each worker
-            StringBuilder sb = new StringBuilder();
+        // return readable statistics for each worker
+        StringBuilder sb = new StringBuilder();
 
-            sb.append("=============== WORKER REPORT ===============\n");
+        sb.append("=============== WORKER REPORT ===============\n");
 
-            for (TiredThread w : workers) {
-                sb.append("Worker #").append(w.getWorkerId())
-                        .append(" | Busy: ").append(w.isBusy())
-                        .append(" | Fatigue: ").append(w.getFatigue())
-                        .append(" | Work Time: ").append(w.getTimeUsed() / 1_000_000.0).append(" ms")
-                        .append(" | Idle Time: ").append(w.getTimeIdle() / 1_000_000.0).append(" ms")
-                        .append("\n");
-            }
-
-            sb.append("============================================\n");
-            return sb.toString();
+        for (TiredThread w : workers) {
+            sb.append("Worker #").append(w.getWorkerId())
+                    .append(" | Busy: ").append(w.isBusy())
+                    .append(" | Fatigue: ").append(w.getFatigue())
+                    .append(" | Work Time: ").append(w.getTimeUsed() / 1_000_000.0).append(" ms")
+                    .append(" | Idle Time: ").append(w.getTimeIdle() / 1_000_000.0).append(" ms")
+                    .append("\n");
         }
-    }
 
+        sb.append("============================================\n");
+        return sb.toString();
+    }
+}

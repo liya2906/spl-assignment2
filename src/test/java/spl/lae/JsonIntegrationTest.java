@@ -25,14 +25,6 @@ class JsonIntegrationTest {
     private LinearAlgebraEngine engine;
     private final TestCaseParser parser = new TestCaseParser();
 
-    @AfterEach
-    void tearDown() throws InterruptedException {
-        if (engine != null) {
-            engine.shutdown();
-            engine = null;
-        }
-    }
-
     @TestFactory
     Stream<DynamicTest> testAllJsonFiles() {
         File resourcesDir = new File("resources");
