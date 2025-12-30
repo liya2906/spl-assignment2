@@ -1,7 +1,6 @@
 package spl.lae;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.AfterEach;
 import parser.*;
 
 import java.util.List;

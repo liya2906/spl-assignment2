@@ -4,7 +4,6 @@ import parser.*;
 import memory.*;
 import scheduling.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LinearAlgebraEngine {
@@ -30,7 +29,7 @@ public class LinearAlgebraEngine {
             }
             return computationRoot;
         } catch (IllegalStateException e) {
-        throw new RuntimeException("Executor already shut down", e);
+            throw new RuntimeException("Executor already shut down", e);
         } finally {
             try {
                 executor.shutdown();
@@ -99,13 +98,13 @@ public class LinearAlgebraEngine {
                 leftMatrix.get(0).length() != rightMatrix.get(0).length())
             throw new IllegalArgumentException("cannot ADD, mismatch in matrices sizes");
 
-        List<Runnable> tasks = new ArrayList<>();
-        for (int i = 0; i < leftMatrix.length(); i++) {
+        Runnable[] tasks = new Runnable[leftMatrix.length()];
+        for (int i = 0; i < tasks.length; i++) {
             final int row = i;
             Runnable task = () -> leftMatrix.get(row).add(rightMatrix.get(row));
-            tasks.add(task);
+            tasks[i] = task;
         }
-        return tasks;
+        return List.of(tasks);
     }
 
     public List<Runnable> createMultiplyTasks() {
@@ -122,13 +121,14 @@ public class LinearAlgebraEngine {
         if (leftMatrix.get(0).length() != rightMatrix.get(0).length())
             throw new IllegalArgumentException("cannot MULTIPLY, mismatch in matrices sizes");
 
-        List<Runnable> tasks = new ArrayList<>();
-        for (int i = 0; i < leftMatrix.length(); i++) {
+        Runnable[] tasks = new Runnable[leftMatrix.length()];
+        for (int i = 0; i < tasks.length; i++) {
             final int index = i;
             Runnable task = () -> leftMatrix.get(index).vecMatMul(rightMatrix);
-            tasks.add(task);
+            tasks[i] = task;
         }
-        return tasks;
+        return List.of(tasks);
+
     }
 
     public List<Runnable> createNegateTasks() {
@@ -140,13 +140,14 @@ public class LinearAlgebraEngine {
         if (leftMatrix.getOrientation() != VectorOrientation.ROW_MAJOR)
             throw new IllegalArgumentException("cannot NEGATE, the matrix isn't ROW_MAJOR");
 
-        List<Runnable> tasks = new ArrayList<>();
-        for (int i = 0; i < leftMatrix.length(); i++) {
+        Runnable[] tasks = new Runnable[leftMatrix.length()];
+        for (int i = 0; i < tasks.length; i++) {
             final int index = i;
             Runnable task = () -> leftMatrix.get(index).negate();
-            tasks.add(task);
+            tasks[i] = task;
         }
-        return tasks;
+        return List.of(tasks);
+
     }
 
     // todo: check the transpose
@@ -159,13 +160,14 @@ public class LinearAlgebraEngine {
         if (leftMatrix.getOrientation() != VectorOrientation.ROW_MAJOR)
             throw new IllegalArgumentException("cannot TRANSPOSE, the matrix isn't ROW_MAJOR");
 
-        List<Runnable> tasks = new ArrayList<>();
-        for (int i = 0; i < leftMatrix.length(); i++) {
+        Runnable[] tasks = new Runnable[leftMatrix.length()];
+        for (int i = 0; i < tasks.length; i++) {
             final int index = i;
             Runnable task = () -> leftMatrix.get(index).transpose();
-            tasks.add(task);
+            tasks[i] = task;
         }
-        return tasks;
+        return List.of(tasks);
+
     }
 
     public String getWorkerReport() {

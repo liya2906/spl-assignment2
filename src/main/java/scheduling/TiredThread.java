@@ -65,8 +65,9 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
             throw new IllegalStateException("Worker is shutting down");
         }
         if (!handoff.offer(task)) {
-            throw new IllegalStateException("Worker already assigned to a task");
+                throw new IllegalStateException("Worker already assigned to a task");
         }
+
     }
 
     /**

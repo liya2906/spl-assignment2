@@ -45,58 +45,55 @@ public class TiredExecutor {
             throw new IllegalStateException("Executor has been shut down");
         }
 
-        while (true) { 
-            TiredThread curr = null;
+        TiredThread curr = null;
 
+        try {
+            curr = idleMinHeap.take();
+        }
+        // Interrupted while blocked on take(), stop waiting and exit
+        catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("submit interrupted", e);
+        }
+
+        TiredThread copy = curr;
+        inFlight.addAndGet(1);
+        // wrap the task so we can maintain the inFlight and idleMinHeap fields
+        Runnable wrappedTask = () -> {
             try {
-                curr = idleMinHeap.take();
-            }
-            // Interrupted while blocked on take(), stop waiting and exit
-            catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException("submit interrupted", e);
-            }
+                task.run();
+            } finally {
+                // task finished, worker became idle again
+                idleMinHeap.add(copy);
 
-            TiredThread copy = curr;
-            inFlight.addAndGet(1);
-            // wrap the task so we can maintain the inFlight and idleMinHeap fields
-            Runnable wrappedTask = () -> {
-                try {
-                    task.run();
-                } finally {
-                    // task finished, worker became idle again
-                    idleMinHeap.add(copy);
-
-                    // notify all threads that are waiting if all tasks completed
-                    if (inFlight.decrementAndGet() == 0) {
-                        synchronized (this) {
-                            this.notifyAll();
-                        }
-                    }
-                }
-            };
-
-            try {
-                curr.newTask(wrappedTask);
-            }
-            // if the worker was unavailable; return it to the pool and retry
-            catch (IllegalStateException e) {
-
-                if (curr != null && curr.isAlive())
-                    idleMinHeap.add(curr);
-
+                // notify all threads that are waiting if all tasks completed
                 if (inFlight.decrementAndGet() == 0) {
                     synchronized (this) {
                         this.notifyAll();
                     }
                 }
+            }
+        };
 
-                throw e;
+        try {
+            curr.newTask(wrappedTask);
+        }
+        // if the worker was unavailable; return it to the pool and retry
+        catch (IllegalStateException e) {
+
+            if (curr != null && curr.isAlive())
+                idleMinHeap.add(curr);
+
+            if (inFlight.decrementAndGet() == 0) {
+                synchronized (this) {
+                    this.notifyAll();
+                }
             }
 
-            return; // SUCCESS - exit submit
+            throw e;
 
         }
+        return; // SUCCESS - exit submit
     }
 
     public void submitAll(Iterable<Runnable> tasks) {
@@ -151,18 +148,40 @@ public class TiredExecutor {
         // return readable statistics for each worker
         StringBuilder sb = new StringBuilder();
 
-        sb.append("=============== WORKER REPORT ===============\n");
+        sb.append("============== WORKER REPORT ==============\n");
 
         for (TiredThread w : workers) {
             sb.append("Worker #").append(w.getWorkerId())
-                    .append(" | Busy: ").append(w.isBusy())
                     .append(" | Fatigue: ").append(w.getFatigue())
-                    .append(" | Work Time: ").append(w.getTimeUsed() / 1_000_000.0).append(" ms")
-                    .append(" | Idle Time: ").append(w.getTimeIdle() / 1_000_000.0).append(" ms")
+                    .append(" | Work Time: ")
+                    .append(w.getTimeUsed() / 1_000_000.0).append(" ms")
+                    .append(" | Idle Time: ")
+                    .append(w.getTimeIdle() / 1_000_000.0).append(" ms")
                     .append("\n");
         }
 
-        sb.append("============================================\n");
+        sb.append("------------------------------------------\n");
+        sb.append("Fairness (Sum of Squared Deviations): ")
+                .append(calculateFairness()).append("\n");
+        sb.append("==========================================\n");
+
         return sb.toString();
+    }
+
+    private double calculateFairness() {
+        double sum = 0.0;
+        for (TiredThread w : workers) {
+            sum += w.getFatigue();
+        }
+
+        double avg = sum / workers.length;
+
+        double fairness = 0.0;
+        for (TiredThread w : workers) {
+            double diff = w.getFatigue() - avg;
+            fairness += diff * diff;
+        }
+
+        return fairness;
     }
 }
