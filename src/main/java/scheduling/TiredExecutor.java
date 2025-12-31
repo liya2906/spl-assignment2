@@ -52,8 +52,8 @@ public class TiredExecutor {
         }
         // Interrupted while blocked on take(), stop waiting and exit
         catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new IllegalStateException("submit interrupted", e);
+            System.out.println("[TiredExecutor] Submit interrupted: " + e.getMessage());
+            return;
         }
 
         TiredThread copy = curr;
@@ -111,8 +111,8 @@ public class TiredExecutor {
                     // waiting until inFlight= 0 (notified by submit)
                     this.wait();
                 } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return; // TODO: check if we need to throw an exception
+                    System.out.println("[TiredExecutor] SubmitAll interrupted: " + e.getMessage());
+                    return; 
                 }
             }
         }
@@ -128,7 +128,7 @@ public class TiredExecutor {
                 }
                 // current thread was interrupted while waiting for shutdown conditions
                 catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                    System.out.println("[TiredExecutor] Shutdown interrupted:  " + e.getMessage());
                     throw e;
                 }
             }

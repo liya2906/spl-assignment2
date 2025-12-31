@@ -87,7 +87,7 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
         // If the thread calling shutdown is interrupted while waiting,
         // restore the interrupt status and exit
         catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            System.out.println("[TiredThread] Shutdown interrupted:  " + e.getMessage());
         }
     }
 
@@ -126,7 +126,8 @@ public class TiredThread extends Thread implements Comparable<TiredThread> {
         }
         // Interrupted while blocked on take(), stop waiting and exit
         catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+            System.out.println("[TiredThread] run interrupted:  " + e.getMessage());
+            alive.set(false);
         }
 
     }
