@@ -120,20 +120,6 @@ public class TiredExecutor {
 
     public void shutdown() throws InterruptedException {
 
-        // wait until all in-flight tasks are completed
-        synchronized (this) {
-            while (inFlight.get() > 0) {
-                try {
-                    this.wait();
-                }
-                // current thread was interrupted while waiting for shutdown conditions
-                catch (InterruptedException e) {
-                    System.out.println("[TiredExecutor] Shutdown interrupted:  " + e.getMessage());
-                    throw e;
-                }
-            }
-        }
-
         for (int i = 0; i < workers.length; i++) {
             workers[i].shutdown();
         }

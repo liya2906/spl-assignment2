@@ -14,6 +14,8 @@ public class SharedVector {
     }
 
     public double get(int index) {
+        // Read lock: reading shared data while other threads may also read,
+        // but no thread may write at the same time.
         readLock();
         try {
             return vector[index];
@@ -23,6 +25,8 @@ public class SharedVector {
     }
 
     public int length() {
+        // Read-only access → read lock
+        // Length depends on the vector array which may be replaced later.
         readLock();
         try {
             return vector.length;
@@ -32,6 +36,8 @@ public class SharedVector {
     }
 
     public VectorOrientation getOrientation() {
+        // Read-only access → read lock
+        // Orientation is shared state and may be modified by transpose()
         readLock();
         try {
             return orientation;
@@ -56,8 +62,12 @@ public class SharedVector {
         this.lock.readLock().unlock();
     }
 
-    // todo: check the transpose
+
     public void transpose() {
+        /*
+         * Transpose changes the orientation of the vector.
+         * This is a write operation → requires write lock.
+         */
         writeLock();
         try {
             switch (orientation) {
@@ -74,6 +84,10 @@ public class SharedVector {
         if (other == null)
             throw new IllegalArgumentException("cant add, other vector is null");
 
+         /*
+         * This vector is modified → write lock
+         * Other vector is only read → read lock
+         */
         this.writeLock();
         other.readLock();
         try {
@@ -95,7 +109,10 @@ public class SharedVector {
 
     public void negate() {
         // negate vector
-
+        /*
+         * Negation modifies the vector contents,
+         * therefore requires exclusive write access.
+         */
         this.writeLock();
         try {
             for (int i = 0; i < vector.length; i++) {
@@ -109,6 +126,10 @@ public class SharedVector {
     public double dot(SharedVector other) {
         // compute dot product (row · column)
 
+        /*
+         * Dot product only reads from both vectors,
+         * so both are protected using read locks.
+         */
         this.readLock();
         other.readLock();
         try {
@@ -144,6 +165,10 @@ public class SharedVector {
             throw new IllegalArgumentException(" matrix invalid orientation, we cant multiply matrix with vector");
         }
 
+        /*
+         * Phase 1: Read-only access to the vector
+         * Computes the result into a temporary array.
+         */
         this.readLock();
         double[] result = new double[matrix.length()];
         try {
@@ -160,6 +185,10 @@ public class SharedVector {
         } finally {
             this.readUnlock();
         }
+        /*
+         * Phase 2: Write back the result
+         * Requires exclusive write access.
+         */
         this.writeLock();
         try{
             this.vector = result;
