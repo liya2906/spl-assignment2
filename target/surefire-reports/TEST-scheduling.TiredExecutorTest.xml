@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="spl.lae.LinearAlgebraEngineTests" time="0.024" tests="6" errors="0" skipped="0" failures="0">
+<testsuite xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="https://maven.apache.org/surefire/maven-surefire-plugin/xsd/surefire-test-report-3.0.xsd" version="3.0" name="scheduling.TiredExecutorTest" time="1.104" tests="12" errors="0" skipped="0" failures="0">
   <properties>
     <property name="java.specification.version" value="25"/>
     <property name="sun.jnu.encoding" value="UTF-8"/>
@@ -7,12 +7,13 @@
     <property name="java.vm.vendor" value="Homebrew"/>
     <property name="sun.arch.data.model" value="64"/>
     <property name="java.vendor.url" value="https://github.com/Homebrew/homebrew-core/issues"/>
+    <property name="user.timezone" value="Asia/Jerusalem"/>
     <property name="os.name" value="Mac OS X"/>
     <property name="java.vm.specification.version" value="25"/>
     <property name="sun.java.launcher" value="SUN_STANDARD"/>
     <property name="user.country" value="IL"/>
     <property name="sun.boot.library.path" value="/opt/homebrew/Cellar/openjdk/25.0.1/libexec/openjdk.jdk/Contents/Home/lib"/>
-    <property name="sun.java.command" value="/Users/noascomputer/IdeaProjects/spl-assignment2/target/surefire/surefirebooter-20251223175052753_3.jar /Users/noascomputer/IdeaProjects/spl-assignment2/target/surefire 2025-12-23T17-50-52_087-jvmRun1 surefire-20251223175052753_1tmp surefire_0-20251223175052753_2tmp"/>
+    <property name="sun.java.command" value="/Users/noascomputer/IdeaProjects/spl-assignment2/target/surefire/surefirebooter-20260101170945492_3.jar /Users/noascomputer/IdeaProjects/spl-assignment2/target/surefire 2026-01-01T17-09-45_454-jvmRun1 surefire-20260101170945492_1tmp surefire_0-20260101170945492_2tmp"/>
     <property name="http.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="jdk.debug" value="release"/>
     <property name="surefire.test.class.path" value="/Users/noascomputer/IdeaProjects/spl-assignment2/target/test-classes:/Users/noascomputer/IdeaProjects/spl-assignment2/target/classes:/Users/noascomputer/.m2/repository/org/junit/jupiter/junit-jupiter/5.10.2/junit-jupiter-5.10.2.jar:/Users/noascomputer/.m2/repository/org/junit/jupiter/junit-jupiter-api/5.10.2/junit-jupiter-api-5.10.2.jar:/Users/noascomputer/.m2/repository/org/opentest4j/opentest4j/1.3.0/opentest4j-1.3.0.jar:/Users/noascomputer/.m2/repository/org/junit/platform/junit-platform-commons/1.10.2/junit-platform-commons-1.10.2.jar:/Users/noascomputer/.m2/repository/org/apiguardian/apiguardian-api/1.1.2/apiguardian-api-1.1.2.jar:/Users/noascomputer/.m2/repository/org/junit/jupiter/junit-jupiter-params/5.10.2/junit-jupiter-params-5.10.2.jar:/Users/noascomputer/.m2/repository/org/junit/jupiter/junit-jupiter-engine/5.10.2/junit-jupiter-engine-5.10.2.jar:/Users/noascomputer/.m2/repository/org/junit/platform/junit-platform-engine/1.10.2/junit-platform-engine-1.10.2.jar:/Users/noascomputer/.m2/repository/com/fasterxml/jackson/core/jackson-databind/2.17.1/jackson-databind-2.17.1.jar:/Users/noascomputer/.m2/repository/com/fasterxml/jackson/core/jackson-annotations/2.17.1/jackson-annotations-2.17.1.jar:/Users/noascomputer/.m2/repository/com/fasterxml/jackson/core/jackson-core/2.17.1/jackson-core-2.17.1.jar:"/>
@@ -29,7 +30,7 @@
     <property name="java.vm.specification.vendor" value="Oracle Corporation"/>
     <property name="java.specification.name" value="Java Platform API Specification"/>
     <property name="apple.awt.application.name" value="ForkedBooter"/>
-    <property name="surefire.real.class.path" value="/Users/noascomputer/IdeaProjects/spl-assignment2/target/surefire/surefirebooter-20251223175052753_3.jar"/>
+    <property name="surefire.real.class.path" value="/Users/noascomputer/IdeaProjects/spl-assignment2/target/surefire/surefirebooter-20260101170945492_3.jar"/>
     <property name="sun.management.compiler" value="HotSpot 64-Bit Tiered Compilers"/>
     <property name="ftp.nonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.runtime.version" value="25.0.1"/>
@@ -59,10 +60,26 @@
     <property name="socksNonProxyHosts" value="local|*.local|169.254/16|*.169.254/16"/>
     <property name="java.class.version" value="69.0"/>
   </properties>
-  <testcase name="testNullRootFails" classname="spl.lae.LinearAlgebraEngineTests" time="0.012"/>
-  <testcase name="testSimpleAdd" classname="spl.lae.LinearAlgebraEngineTests" time="0.002"/>
-  <testcase name="testAddWithSingleOperandFails" classname="spl.lae.LinearAlgebraEngineTests" time="0.0"/>
-  <testcase name="testSimpleMultiply" classname="spl.lae.LinearAlgebraEngineTests" time="0.001"/>
-  <testcase name="testNegate" classname="spl.lae.LinearAlgebraEngineTests" time="0.001"/>
-  <testcase name="testMultiplyDimensionMismatch" classname="spl.lae.LinearAlgebraEngineTests" time="0.001"/>
+  <testcase name="testShutdown_DuringTaskExecution_WaitsForCompletion" classname="scheduling.TiredExecutorTest" time="0.102"/>
+  <testcase name="testFatigue_VeryHighFatigueFactor" classname="scheduling.TiredExecutorTest" time="0.107"/>
+  <testcase name="testTaskExecution_ExceptionInTask_BusyFlagCleared" classname="scheduling.TiredExecutorTest" time="0.057">
+    <system-err><![CDATA[Exception in thread "FF=1.00" java.lang.RuntimeException: Task failed
+	at scheduling.TiredExecutorTest.lambda$testTaskExecution_ExceptionInTask_BusyFlagCleared$0(TiredExecutorTest.java:23)
+	at scheduling.TiredThread.run(TiredThread.java:117)
+]]></system-err>
+  </testcase>
+  <testcase name="testGetWorkerId_UniqueIds" classname="scheduling.TiredExecutorTest" time="0.002"/>
+  <testcase name="testCompareTo_AfterNoWork" classname="scheduling.TiredExecutorTest" time="0.001"/>
+  <testcase name="testTaskExecution_ZeroSleepTask" classname="scheduling.TiredExecutorTest" time="0.052"/>
+  <testcase name="testNewTask_WhileBusy_DoesNotRunInParallel" classname="scheduling.TiredExecutorTest" time="0.229"/>
+  <testcase name="testTimeTracking_VeryShortTask" classname="scheduling.TiredExecutorTest" time="0.056"/>
+  <testcase name="testTaskExecution_ExceptionInTask_TimeUsedStillIncreases" classname="scheduling.TiredExecutorTest" time="0.106">
+    <system-err><![CDATA[Exception in thread "FF=1.00" java.lang.RuntimeException: Task failed
+	at scheduling.TiredExecutorTest.lambda$testTaskExecution_ExceptionInTask_TimeUsedStillIncreases$0(TiredExecutorTest.java:45)
+	at scheduling.TiredThread.run(TiredThread.java:117)
+]]></system-err>
+  </testcase>
+  <testcase name="testFatigue_ZeroFatigueFactor" classname="scheduling.TiredExecutorTest" time="0.108"/>
+  <testcase name="testStateConsistency_AfterMultipleTasks" classname="scheduling.TiredExecutorTest" time="0.166"/>
+  <testcase name="testNewTask_ImmediatelyAfterTask_Succeeds" classname="scheduling.TiredExecutorTest" time="0.109"/>
 </testsuite>
